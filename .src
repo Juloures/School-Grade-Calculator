@@ -1,0 +1,127 @@
+import tkinter as tk
+from tkinter import messagebox, ttk
+
+# Definir disciplinas
+disciplinas = [
+    "Educação Física", "Língua Estrangeira - Inglês", "Língua Portuguesa e Literatura",
+    "Arte", "Biologia", "Física", "Química", "Ciências da Natureza", "Projetos de Investigação",
+    "Geografia", "História", "Filosofia", "Sociologia", "Matemática", 
+    "Língua Estrangeira - Espanhol", "Projeto de Vida"
+]
+
+# Função para calcular a nota necessária no 3º trimestre
+def calcular():
+    resultados = []
+    total_pontos = 0
+    disciplinas_validas = 0
+    
+    for i, disc in enumerate(disciplinas):
+        try:
+            # Obter e processar as entradas para aceitar "N" (nulo)
+            entrada1 = entries[i][0].get().replace(',', '.')
+            entrada2 = entries[i][1].get().replace(',', '.')
+            
+            if entrada1.upper() == "N":
+                nota1 = None
+            else:
+                nota1 = float(entrada1)
+                
+            if entrada2.upper() == "N":
+                nota2 = None
+            else:
+                nota2 = float(entrada2)
+
+            media_aprovacao = 6.0
+            
+            # Calcular a nota mínima necessária no 3º trimestre se ambas as notas não forem nulas
+            if nota1 is not None and nota2 is not None:
+                nota_necessaria_terceiro_trimestre = (media_aprovacao * 3) - (nota1 + nota2)
+                total_pontos += (nota1 + nota2)
+                disciplinas_validas += 1  # Incrementa apenas para disciplinas com notas válidas
+                
+                if nota_necessaria_terceiro_trimestre > 10:
+                    mensagem = "Possível reprovação"
+                    nota_necessaria = "Acima de 10"
+                elif nota_necessaria_terceiro_trimestre <= 0:
+                    mensagem = "Já está aprovado"
+                    nota_necessaria = "N/A"
+                else:
+                    mensagem = "Possível aprovação"
+                    nota_necessaria = f"{nota_necessaria_terceiro_trimestre:.2f}"
+            else:
+                mensagem = "N/A"
+                nota_necessaria = "N/A"
+
+            resultados.append((disc, nota_necessaria, mensagem))
+        except ValueError:
+            messagebox.showerror("Erro de entrada", f"Por favor, insira valores válidos para {disc}")
+            return
+
+    # Calcular pontos faltantes para atingir 288 apenas para disciplinas válidas
+    pontos_faltantes = max(288 - total_pontos, 0)
+    if disciplinas_validas > 0:
+        media_faltante_por_disciplina = pontos_faltantes / disciplinas_validas
+    else:
+        media_faltante_por_disciplina = 0
+
+    # Exibir resultados em uma janela separada com uma tabela
+    resultado_janela = tk.Toplevel(root)
+    resultado_janela.title("Resultados")
+
+    # Configurar a tabela com Treeview
+    tree = ttk.Treeview(resultado_janela, columns=("Disciplina", "Nota Necessária", "Mensagem"), show="headings")
+    tree.heading("Disciplina", text="Disciplina")
+    tree.heading("Nota Necessária", text="Nota Necessária")
+    tree.heading("Mensagem", text="Mensagem")
+    
+    # Ajustar largura das colunas
+    tree.column("Disciplina", width=200)
+    tree.column("Nota Necessária", width=120)
+    tree.column("Mensagem", width=150)
+
+    # Inserir os resultados na tabela
+    for disc, nota, msg in resultados:
+        tree.insert("", "end", values=(disc, nota, msg))
+
+    # Adicionar linha total ao final da tabela
+    tree.insert("", "end", values=("Total", f"{pontos_faltantes:.2f}", f"Faltam {media_faltante_por_disciplina:.2f} por disciplina"))
+    
+    # Exibir a tabela
+    tree.pack(fill="both", expand=True)
+
+# Criar janela principal
+root = tk.Tk()
+root.title("Calculadora de Média Escolar")
+
+# Definir fundo da janela principal
+root.configure(bg="#B0C4DE")
+
+# Rótulos de cabeçalho para trimestres
+header_style = {'bg': '#ADD8E6', 'fg': '#191970'}
+tk.Label(root, text="Disciplina", **header_style).grid(row=0, column=0, padx=5, pady=5, sticky="w")
+tk.Label(root, text="1º Trimestre", **header_style).grid(row=0, column=1, padx=5, pady=5)
+tk.Label(root, text="2º Trimestre", **header_style).grid(row=0, column=2, padx=5, pady=5)
+
+# Criar rótulos e campos de entrada para cada disciplina e trimestre
+entries = []
+for i, disc in enumerate(disciplinas):
+    # Rótulo da disciplina
+    tk.Label(root, text=disc, bg="#B0C4DE").grid(row=i+1, column=0, padx=5, pady=5, sticky="w")
+    
+    # Entrada para o 1º e 2º trimestres
+    entry1 = tk.Entry(root, width=5)
+    entry1.grid(row=i+1, column=1)
+    entry2 = tk.Entry(root, width=5)
+    entry2.grid(row=i+1, column=2)
+    
+    # Armazenar entradas para cálculo
+    entries.append((entry1, entry2))
+
+# Instrução sobre como inserir "N" para valores ausentes
+tk.Label(root, text="Caso não tenha uma nota, coloque 'N' para não ter alterações no resultado.", bg="#B0C4DE", fg="#191970").grid(row=len(disciplinas) + 1, column=0, columnspan=3, padx=5, pady=5)
+
+# Botão para calcular
+tk.Button(root, text="Calcular", command=calcular).grid(row=len(disciplinas) + 2, column=0, columnspan=3, pady=10)
+
+# Executar a aplicação
+root.mainloop()
